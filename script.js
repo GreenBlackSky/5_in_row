@@ -42,6 +42,7 @@ class Cursor {
     }
     draw() {
         // TODO implement, animate
+        // TODO change color on lock
     }
 }
 
@@ -144,6 +145,10 @@ class Game {
         }
     }
 
+    checkWin() {
+        // TODO implement
+    }
+
     keyDownHandler(event) {
         let old_x = this.focus_x;
         let old_y = this.focus_y;
@@ -151,33 +156,45 @@ class Game {
 
         if(
             (event.key == "Right" || event.key == "ArrowRight") &&
-            this.focus_x < config.columns_n - 1 &&
-            !this.slots[this.focus_y][this.focus_x + 1].blocked
+            this.focus_x < config.columns_n - 1
         ) {
             this.focus_x++;
         } else if(
             (event.key == "Left" || event.key == "ArrowLeft") &&
-            this.focus_x > 0 &&
-            !this.slots[this.focus_y][this.focus_x - 1].blocked
+            this.focus_x > 0
         ) {
             this.focus_x--;
         } else if(
             (event.key == 'Down' || event.key == "ArrowDown") &&
-            this.focus_y < config.rows_n - 1 &&
-            !this.slots[this.focus_y + 1][this.focus_x].blocked
+            this.focus_y < config.rows_n - 1
         ) {
             this.focus_y++;
         } else if(
             (event.key == "Up" || event.key == "ArrowUp") &&
-            this.focus_y > 0 &&
-            !this.slots[this.focus_y - 1][this.focus_x].blocked
+            this.focus_y > 0
         ) {
             this.focus_y--;
         }
-        this.slots[this.focus_y][this.focus_x].focusedOn = true;
 
+        // TODO optimize this
         if(this.focus_x != old_x || this.focus_y != old_y) {
-            this.draw();
+            if(event.shiftKey && this.slots[old_y][old_x].color) {
+                if(
+                    this.slots[this.focus_y][this.focus_x].blocked ||
+                    this.slots[this.focus_y][this.focus_x].color
+                ) {
+                    this.focus_x = old_x;
+                    this.focus_y = old_y;
+                } else {
+                    this.slots[this.focus_y][this.focus_x].color = this.slots[old_y][old_x].color;
+                    this.slots[old_y][old_x].color = null;
+                    this.slots[this.focus_y][this.focus_x].focusedOn = true;
+                    this.draw();
+                }
+            } else {
+                this.slots[this.focus_y][this.focus_x].focusedOn = true;
+                this.draw();
+            }
         }
     }
 }
