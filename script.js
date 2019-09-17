@@ -129,6 +129,8 @@ class Game {
         this.focus_x = Math.floor(this.slots[this.focus_y].length/2);
         this.slots[this.focus_y][this.focus_x].focusedOn = true;
 
+        this.score = 0;
+
         document.addEventListener("keydown", this.keyDownHandler.bind(this), false);
     }
 
@@ -146,7 +148,14 @@ class Game {
     }
 
     checkWin() {
-        // TODO implement
+        for(let x in config.win_lines) {
+            for(let y = 0; y < config.rows_n - 1; y++) {
+                if(this.slots[y][x].color != this.slots[y + 1][x].color) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     keyDownHandler(event) {
@@ -188,8 +197,15 @@ class Game {
                 } else {
                     this.slots[this.focus_y][this.focus_x].color = this.slots[old_y][old_x].color;
                     this.slots[old_y][old_x].color = null;
+
+                    this.score++;
                     this.slots[this.focus_y][this.focus_x].focusedOn = true;
                     this.draw();
+                    if(this.checkWin()) {
+                        alert("YOU WON! score: " + this.score);
+                        document.location.reload();
+                    }
+
                 }
             } else {
                 this.slots[this.focus_y][this.focus_x].focusedOn = true;
