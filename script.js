@@ -36,13 +36,21 @@ function shuffle(array) {
 }
 
 
+class Cursor {
+    constructor() {
+
+    }
+    draw() {
+        // TODO implement, animate
+    }
+}
+
 class Chip {
     constructor(color) {
         this.color = color;
     }
     draw(){
-        // TODO implement
-        // TODO moving animation
+        // TODO implement, animate
     }
 }
 
@@ -61,7 +69,6 @@ class Slot {
         this.color = null;
         this.blocked = false;
         this.focusedOn = false;
-        console.log(this);
     }
 
     draw(){
@@ -119,9 +126,16 @@ class Game {
                 }
             }
         }
+
+        this.focus_y = Math.floor(this.slots.length/2);
+        this.focus_x = Math.floor(this.slots[this.focus_y].length/2);
+        this.slots[this.focus_y][this.focus_x].focusedOn = true;
+
+        document.addEventListener("keydown", this.keyDownHandler.bind(this), false);
     }
 
     draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let i = 0; i < this.controlSlots.length; i++) {
             this.controlSlots[i].draw();
         }
@@ -131,6 +145,37 @@ class Game {
                 this.slots[y][x].draw();
             }
         }
+    }
+
+    keyDownHandler(event) {
+        this.slots[this.focus_y][this.focus_x].focusedOn = false;
+        if(
+            (event.key == "Right" || event.key == "ArrowRight") &&
+            this.focus_x < config.columns_n - 1 &&
+            !this.slots[this.focus_y][this.focus_x + 1].blocked
+        ) {
+            this.focus_x++;
+        } else if(
+            (event.key == "Left" || event.key == "ArrowLeft") &&
+            this.focus_x > 0 &&
+            !this.slots[this.focus_y][this.focus_x - 1].blocked
+        ) {
+            this.focus_x--;
+        } else if(
+            (event.key == 'Down' || event.key == "ArrowDown") &&
+            this.focus_y < config.rows_n - 1 &&
+            !this.slots[this.focus_y + 1][this.focus_x].blocked
+        ) {
+            this.focus_y++;
+        } else if(
+            (event.key == "Up" || event.key == "ArrowUp") &&
+            this.focus_y > 0 &&
+            !this.slots[this.focus_y - 1][this.focus_x].blocked
+        ) {
+            this.focus_y--;
+        }
+        this.slots[this.focus_y][this.focus_x].focusedOn = true;
+        this.draw(); // TODO optimize redarw
     }
 }
 
