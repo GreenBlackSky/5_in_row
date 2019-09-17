@@ -1,18 +1,29 @@
 
-const WHITE = '#ffffff';
-const GRAY = "#808080";
-const DARK_GRAY = "#c0c0c0";
-const BLACK = "#000000";
-const RED = "#ff0000";
-const GREEN = "#00ff00";
-const BLUE = "#0000ff";
-
-
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
+const config = loadConfig();
 
-const columnsN = 5;
-const rowsN = 5;
+
+// TODO Make request asynchonously and use some placeholder
+function loadConfig() {
+    let ret = null;
+    let xobj = new XMLHttpRequest();
+    xobj.overrideMimeType("application/json");
+    xobj.open('GET', 'config.json', false);
+    xobj.onreadystatechange = function() {
+        if(xobj.readyState == 4 && xobj.status == "200") {
+            ret = JSON.parse(xobj.responseText);
+        }
+    };
+    xobj.send(null);
+    return ret;
+}
+
+
+function checkConfig() {
+// TODO implement
+}
+
 
 function shuffle(array) {
     for(let i = 0; i < array.length; i++) {
@@ -24,35 +35,41 @@ function shuffle(array) {
 }
 
 
-class Block {
-    constructor(c, r, color =GRAY) {
-        let offsetLeft = 10;
-        let offsetTop = 10;
-        let padding = 10;
-
-        this.width = 45;
-        this.height = 45;
-        
-        this.x = offsetLeft + c*(this.width + padding);
-        this.y = offsetTop + r*(this.height + padding);
-
+class Chip {
+    constructor(color) {
         this.color = color;
-        this.focusedOn = false;
-        this.blocked = false;
+    }
+}
+
+
+class Slot {
+    constructor(c, r, blocked=false) {
+
+        // TODO Make static
+        width = Math.floor((ctx.width - config.padding)/config.colums_n);
+        height = Math.floor((ctx.height - config.padding)/config.rows_n);
+
+        this.x = config.offsetLeft + c*(config.slot_width + config.padding);
+        this.y = config.offsetTop + r*(config.slot_height + config.padding);
+
+        this.chip = null;
+        this.blocked = blocked;
     }
 
     draw(){
         ctx.beginPath();
-        ctx.rect(this.x, this.y, this.width, this.height);
+        ctx.rect(this.x, this.y, config.slot_width, config.slot_height);
         if(this.blocked) {
-            ctx.fillStyle = BLACK;
+            ctx.fillStyle = config.blocked_slot_color;
+        } else if (this.chip) {
+            ctx.fillStyle = this.chip.color;
         } else {
-            ctx.fillStyle = this.color;
+            ctx.fillStyle = config.empty_slot_color;
         }
         ctx.fill();
         if(this.focusedOn) {
             ctx.lineWidth = "10";
-            ctx.strokeStyle = WHITE;
+            ctx.strokeStyle = config.cursor_color;
             ctx.stroke();
         }
         ctx.closePath();
@@ -62,56 +79,31 @@ class Block {
 
 class Game {
     constructor() {
-        this.canvas = document.getElementById("myCanvas");
-        this.ctx = this.canvas.getContext("2d");
 
-        let controlColors = [RED, GREEN, BLUE];
+        let controlColors = [...config.chip_colors];
         shuffle(controlColors);
 
-        this.controlBlocks = []
-        for(let i = 0; i < Math.ceil(columnsN/2); i++) {
-            this.controlBlocks[i] = new Block(i*2, 0, controlColors[i]);
-        }
+        this.controlSlots = [];
+        this.slots = [];
 
-        let allBlocksColors = []
-        for(let i = 0; i < Math.ceil(columnsN/2); i++) {
-            for(let j = 0; j < rowsN; j++) {
-                allBlocksColors[i * columnsN + j] = controlColors[i];
-            }
-        }
-        shuffle(allBlocksColors);
+        let chips = []
+        shuffle(chips);
+        // TODO Fill field
 
-        this.gameBlocks = [];
-        for(let i = 0; i < columnsN; i++) {
-            this.gameBlocks[i] = [];
-            if(i%2 == 0) {
-                for(let j = 0; j < rowsN; j++) {
-                    this.gameBlocks[i][j] = new Block(i, 2 + j, allBlocksColors[Math.floor(i/2) * columnsN + j]);
-                }
-            } else {
-                for(let j = 0; j < rowsN; j++) {
-                    this.gameBlocks[i][j] = new Block(i, 2 + j);
-                    if(j%2 == 0) {
-                        this.gameBlocks[i][j].blocked = true;
-                    }
-                }
-            }
-        }
-
-        this.gameBlocks[Math.floor(columnsN/2)][Math.floor(rowsN/2)].focusedOn = true;
     }
 
     draw() {
-        for(let i = 0; i < Math.ceil(columnsN/2); i++) {
-            this.controlBlocks[i].draw();
+        for(let i = 0; i < this.controlSlots.length; i++) {
+            this.controlSlots[i].draw();
         }
-        for(let i = 0; i < columnsN; i++) {
+        for(let i = 0; i < this.slots.length; i++) {
+            let row = this.slots[i]
             for(let j = 0; j < rowsN; j++) {
-                this.gameBlocks[i][j].draw();
+                row[j].draw();
             }
         }
     }
 }
 
-let game = new Game();
-game.draw();
+// let game = new Game();
+// game.draw();

@@ -1,0 +1,19 @@
+{
+    "padding": 10,
+    "starting_configuration": [
+        ["rnd_color", "blocked", "rnd_color", "blocked", "rnd_color"],
+        ["rnd_color", "empty", "rnd_color", "empty", "rnd_color"],
+        ["rnd_color", "blocked", "rnd_color", "blocked", "rnd_color"],
+        ["rnd_color", "empty", "rnd_color", "empty", "rnd_color"],
+        ["rnd_color", "blocked", "rnd_color", "blocked", "rnd_color"]
+    ],
+    "win_lines": [0, 2, 4],
+    "chip_colors": {
+        "RED": "#ff0000",
+        "GREEN": "#00ff00",
+        "BLUE": "#0000ff"
+    },
+    "cursor_color": "#ffffff",
+    "empty_slot_color": "#808080",
+    "blocked_slot_color": "#000000"
+}
