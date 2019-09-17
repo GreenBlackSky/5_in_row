@@ -57,13 +57,8 @@ class Chip {
 
 class Slot {
     constructor(c, r) {
-
-        // TODO Make static
-        this.width = Math.floor((canvas.width - config.padding)/config.columns_n) - config.padding;
-        this.height = Math.floor((canvas.height - config.padding)/(config.rows_n + 2)) - config.padding;
-
-        this.x = config.padding + c*(this.width + config.padding);
-        this.y = config.padding + (r + 2)*(this.height + config.padding);
+        this.x = config.padding + c*(Slot.width + config.padding);
+        this.y = config.padding + (r + 2)*(Slot.height + config.padding);
 
         // TODO replace with chips
         this.color = null;
@@ -73,7 +68,7 @@ class Slot {
 
     draw(){
         ctx.beginPath();
-        ctx.rect(this.x, this.y, this.width, this.height);
+        ctx.rect(this.x, this.y, Slot.width, Slot.height);
         if(this.blocked) {
             ctx.fillStyle = config.blocked_slot_color;
         } else if (this.color) {
@@ -91,6 +86,9 @@ class Slot {
     }
 }
 
+Slot.width = Math.floor((canvas.width - config.padding)/config.columns_n) - config.padding;
+Slot.height = Math.floor((canvas.height - config.padding)/(config.rows_n + 2)) - config.padding;
+
 
 class Game {
     constructor() {
@@ -98,7 +96,6 @@ class Game {
         let controlColors = [...config.chip_colors];
         shuffle(controlColors);
 
-        // TODO use map?
         this.controlSlots = [];
         for(let i = 0; i < controlColors.length; i++) {
             this.controlSlots.push(new Slot(config.win_lines[i], -2));
@@ -116,7 +113,7 @@ class Game {
         this.slots = [];
         let field = config.starting_configuration;
         for(let y = 0; y < field.length; y++) {
-            this.slots[y] = []
+            this.slots.push([]);
             for(let x = 0; x < field[y].length; x++) {
                 this.slots[y][x] = new Slot(x, y);
                 if(field[y][x] == 'rnd_color') {
@@ -148,7 +145,10 @@ class Game {
     }
 
     keyDownHandler(event) {
+        let old_x = this.focus_x;
+        let old_y = this.focus_y;
         this.slots[this.focus_y][this.focus_x].focusedOn = false;
+
         if(
             (event.key == "Right" || event.key == "ArrowRight") &&
             this.focus_x < config.columns_n - 1 &&
@@ -175,7 +175,10 @@ class Game {
             this.focus_y--;
         }
         this.slots[this.focus_y][this.focus_x].focusedOn = true;
-        this.draw(); // TODO optimize redarw
+
+        if(this.focus_x != old_x || this.focus_y != old_y) {
+            this.draw();
+        }
     }
 }
 
