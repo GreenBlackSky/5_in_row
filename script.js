@@ -22,6 +22,7 @@ function loadConfig() {
 
 function checkConfig() {
 // TODO implement
+// TODO remove columns_n and rows_n from config
 }
 
 
@@ -39,30 +40,37 @@ class Chip {
     constructor(color) {
         this.color = color;
     }
+    draw(){
+        // TODO implement
+        // TODO moving animation
+    }
 }
 
 
 class Slot {
-    constructor(c, r, blocked=false) {
+    constructor(c, r) {
 
         // TODO Make static
-        width = Math.floor((ctx.width - config.padding)/config.colums_n);
-        height = Math.floor((ctx.height - config.padding)/config.rows_n);
+        this.width = Math.floor((canvas.width - config.padding)/config.columns_n) - config.padding;
+        this.height = Math.floor((canvas.height - config.padding)/(config.rows_n + 2)) - config.padding;
 
-        this.x = config.offsetLeft + c*(config.slot_width + config.padding);
-        this.y = config.offsetTop + r*(config.slot_height + config.padding);
+        this.x = config.padding + c*(this.width + config.padding);
+        this.y = config.padding + (r + 2)*(this.height + config.padding);
 
-        this.chip = null;
-        this.blocked = blocked;
+        // TODO replace with chips
+        this.color = null;
+        this.blocked = false;
+        this.focusedOn = false;
+        console.log(this);
     }
 
     draw(){
         ctx.beginPath();
-        ctx.rect(this.x, this.y, config.slot_width, config.slot_height);
+        ctx.rect(this.x, this.y, this.width, this.height);
         if(this.blocked) {
             ctx.fillStyle = config.blocked_slot_color;
-        } else if (this.chip) {
-            ctx.fillStyle = this.chip.color;
+        } else if (this.color) {
+            ctx.fillStyle = this.color;
         } else {
             ctx.fillStyle = config.empty_slot_color;
         }
@@ -83,27 +91,48 @@ class Game {
         let controlColors = [...config.chip_colors];
         shuffle(controlColors);
 
+        // TODO use map?
         this.controlSlots = [];
+        for(let i = 0; i < controlColors.length; i++) {
+            this.controlSlots.push(new Slot(config.win_lines[i], -2));
+            this.controlSlots[i].color = controlColors[i];
+        }
+
+        let randomColors = [];
+        for(let i = 0; i < controlColors.length; i++) {
+            for(let j = 0; j < config.rows_n; j++) {
+                randomColors.push(controlColors[i]);
+            }
+        }
+        shuffle(randomColors);
+
         this.slots = [];
-
-        let chips = []
-        shuffle(chips);
-        // TODO Fill field
-
+        let field = config.starting_configuration;
+        for(let y = 0; y < field.length; y++) {
+            this.slots[y] = []
+            for(let x = 0; x < field[y].length; x++) {
+                this.slots[y][x] = new Slot(x, y);
+                if(field[y][x] == 'rnd_color') {
+                    this.slots[y][x].color = randomColors.pop()
+                } else if (field[y][x] == 'blocked') {
+                    this.slots[y][x].blocked = true;
+                }
+            }
+        }
     }
 
     draw() {
         for(let i = 0; i < this.controlSlots.length; i++) {
             this.controlSlots[i].draw();
         }
-        for(let i = 0; i < this.slots.length; i++) {
-            let row = this.slots[i]
-            for(let j = 0; j < rowsN; j++) {
-                row[j].draw();
+
+        for(let y = 0; y < this.slots.length; y++) {
+            for(let x = 0; x < this.slots[y].length; x++) {
+                this.slots[y][x].draw();
             }
         }
     }
 }
 
-// let game = new Game();
-// game.draw();
+let game = new Game();
+game.draw();
