@@ -2,6 +2,7 @@
     "columns_n": 5,
     "rows_n": 5,
     "padding": 10,
+    "cursor_width": 10,
     "starting_configuration": [
         ["rnd_color", "blocked", "rnd_color", "blocked", "rnd_color"],
         ["rnd_color", "empty", "rnd_color", "empty", "rnd_color"],
