@@ -41,9 +41,7 @@ class Slot {
         this.x = config.padding + c*(Slot.width + config.padding);
         this.y = config.padding + (r + 2)*(Slot.height + config.padding);
 
-        // TODO replace with chips
         this.color = null;
-        // this.chip = null;
         this.blocked = false;
         this.focusedOn = false;
     }
@@ -75,66 +73,6 @@ Slot.width = Math.floor((canvas.width - config.padding)/config.columns_n) - conf
 Slot.height = Math.floor((canvas.height - config.padding)/(config.rows_n + 2)) - config.padding;
 
 
-class Chip {
-    constructor(c, r, color) {
-        this.x = config.padding + c*(Slot.width + config.padding) + Slot.width * 0.125;
-        this.y = config.padding + (r + 2)*(Slot.height + config.padding) + Slot.height * 0.125;
-        this.color = color;
-    }
-
-    move() {
-        // TODO animate
-    }
-
-    draw(){
-        ctx.beginPath();
-        ctx.rect(this.x, this.y, Chip.width, Chip.height);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-Chip.width = Math.floor(Slot.width * 0.75);
-Chip.height = Math.floor(Slot.height * 0.75);
-
-
-class Cursor {
-    constructor(c, r) {
-        this.x = config.padding + c*(Slot.width + config.padding);
-        this.y = config.padding + (r + 2)*(Slot.height + config.padding);
-    }
-
-    move() {
-        // TODO implement, animate, move here handling keys and mouse
-    }
-
-    draw() {
-        ctx.beginPath();
-        ctx.rect(
-            this.x, this.y,
-            Slot.width - config.cursor_width, config.cursor_width
-        );
-        ctx.rect(
-            this.x + Slot.width - config.cursor_width, this.y,
-            config.cursor_width, Slot.height - config.cursor_width
-        );
-        ctx.rect(
-            this.x + config.cursor_width, this.y + Slot.height - config.cursor_width,
-            Slot.width - config.cursor_width, config.cursor_width
-        );
-        ctx.rect(
-            this.x, this.y + config.cursor_width,
-            config.cursor_width, Slot.height - config.cursor_width
-        );
-        ctx.fillStyle = config.cursor_color;
-        ctx.fill();
-        ctx.closePath();
-        // TODO change color on lock
-    }
-}
-
-
 class Game {
     constructor() {
 
@@ -163,7 +101,6 @@ class Game {
                 this.slots[y][x] = new Slot(x, y);
                 if(field[y][x] == 'rnd_color') {
                     this.slots[y][x].color = randomColors.pop()
-                    // this.slots[y][x].chip = new Chip(y, x, randomColors.pop())
                 } else if (field[y][x] == 'blocked') {
                     this.slots[y][x].blocked = true;
                 }
@@ -174,6 +111,7 @@ class Game {
         this.focus_x = Math.floor(this.slots[this.focus_y].length/2);
         this.slots[this.focus_y][this.focus_x].focusedOn = true;
 
+        // TODO show score
         this.score = 0;
 
         document.addEventListener("keydown", this.keyDownHandler.bind(this), false);
