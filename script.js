@@ -23,7 +23,29 @@ function loadConfig() {
 function checkConfig() {
 // TODO implement
 // TODO remove columns_n and rows_n from config
+    if(!Array.isArray(config.start_pos)) {
+        alert("Invalid config: start_pos must be an Array");
+        document.location.reload();
+    }
+    config.columns_n = config.start_pos.length;
+    let validSlotValues = new Set(["rnd_color", "blocked", "empty"]);
+    for(let i = 0; i < config.start_pos.length; i++) {
+        if(!Array.isArray(config.start_pos[i])) {
+            alert("Invalid config: every row in start_pos must be an Array");
+            document.location.reload();
+        }
+        for(let j = 0; j < config.start_pos[i].length; j++) {
+            let value = config.start_pos[i][j];
+            if(!validSlotValues.has(value)) {
+                alert("Invalid config: invalid object in start_pos");
+                document.location.reload();
+            }
+        }
+    }
 }
+
+
+checkConfig();
 
 
 function shuffle(array) {
@@ -94,14 +116,13 @@ class Game {
         shuffle(randomColors);
 
         this.slots = [];
-        let field = config.starting_configuration;
-        for(let y = 0; y < field.length; y++) {
+        for(let y = 0; y < config.start_pos.length; y++) {
             this.slots.push([]);
-            for(let x = 0; x < field[y].length; x++) {
-                this.slots[y][x] = new Slot(x, y);
-                if(field[y][x] == 'rnd_color') {
-                    this.slots[y][x].color = randomColors.pop()
-                } else if (field[y][x] == 'blocked') {
+            for(let x = 0; x < config.start_pos[y].length; x++) {
+                this.slots[y].push(new Slot(x, y));
+                if(config.start_pos[y][x] == 'rnd_color') {
+                    this.slots[y][x].color = randomColors.pop();
+                } else if (config.start_pos[y][x] == 'blocked') {
                     this.slots[y][x].blocked = true;
                 }
             }
@@ -111,10 +132,17 @@ class Game {
         this.focus_x = Math.floor(this.slots[this.focus_y].length/2);
         this.slots[this.focus_y][this.focus_x].focusedOn = true;
 
-        // TODO show score
         this.score = 0;
 
         document.addEventListener("keydown", this.keyDownHandler.bind(this), false);
+    }
+
+    drawScore() {
+        ctx.font = String(Slot.height) + "px " + config.score_style;
+        ctx.fillStyle = config.score_color;
+        let x = config.padding;
+        let y = 2 * (config.padding + Slot.height);
+        ctx.fillText("Score: " + this.score, x, y);
     }
 
     draw() {
@@ -128,6 +156,8 @@ class Game {
                 this.slots[y][x].draw();
             }
         }
+
+        this.drawScore();
     }
 
     checkWin() {
@@ -141,58 +171,67 @@ class Game {
         return true;
     }
 
+    moveIsBlocked(currentSlot, nextSlot, focusLocked) {
+        return focusLocked && currentSlot.color && (nextSlot.blocked || nextSlot.color);
+    }
+
+    moveFocus(x, y, focusLocked) {
+        let currentSlot = this.slots[this.focus_y][this.focus_x];
+        let nextSlot = this.slots[y][x];
+
+        currentSlot.focusedOn = false;
+        nextSlot.focusedOn = true;
+
+        this.focus_x = x;
+        this.focus_y =y;
+
+        if(focusLocked && currentSlot.color) {
+            let tmp = nextSlot.color;
+            nextSlot.color = currentSlot.color;
+            currentSlot.color = tmp;
+
+            this.score++;
+        }
+        this.draw();
+    }
+
     keyDownHandler(event) {
-        let old_x = this.focus_x;
-        let old_y = this.focus_y;
-        this.slots[this.focus_y][this.focus_x].focusedOn = false;
+        let x = this.focus_x;
+        let y = this.focus_y;
+
+        let currentSlot = this.slots[y][x];
 
         if(
             (event.key == "Right" || event.key == "ArrowRight") &&
-            this.focus_x < config.columns_n - 1
+            x < config.columns_n - 1 &&
+            !this.moveIsBlocked(currentSlot, this.slots[y][x + 1], event.shiftKey)
         ) {
-            this.focus_x++;
+            x++;
         } else if(
             (event.key == "Left" || event.key == "ArrowLeft") &&
-            this.focus_x > 0
+            x > 0 &&
+            !this.moveIsBlocked(currentSlot, this.slots[y][x - 1], event.shiftKey)
         ) {
-            this.focus_x--;
+            x--;
         } else if(
             (event.key == 'Down' || event.key == "ArrowDown") &&
-            this.focus_y < config.rows_n - 1
+            y < config.rows_n - 1 &&
+            !this.moveIsBlocked(currentSlot, this.slots[y + 1][x], event.shiftKey)
         ) {
-            this.focus_y++;
+            y++;
         } else if(
             (event.key == "Up" || event.key == "ArrowUp") &&
-            this.focus_y > 0
+            y > 0 &&
+            !this.moveIsBlocked(currentSlot, this.slots[y - 1][x], event.shiftKey)
         ) {
-            this.focus_y--;
+            y--;
         }
 
-        // TODO optimize this
-        if(this.focus_x != old_x || this.focus_y != old_y) {
-            if(event.shiftKey && this.slots[old_y][old_x].color) {
-                if(
-                    this.slots[this.focus_y][this.focus_x].blocked ||
-                    this.slots[this.focus_y][this.focus_x].color
-                ) {
-                    this.focus_x = old_x;
-                    this.focus_y = old_y;
-                } else {
-                    this.slots[this.focus_y][this.focus_x].color = this.slots[old_y][old_x].color;
-                    this.slots[old_y][old_x].color = null;
-
-                    this.score++;
-                    this.slots[this.focus_y][this.focus_x].focusedOn = true;
-                    this.draw();
-                    if(this.checkWin()) {
-                        alert("YOU WON! score: " + this.score);
-                        document.location.reload();
-                    }
-
-                }
-            } else {
-                this.slots[this.focus_y][this.focus_x].focusedOn = true;
-                this.draw();
+        if(x != this.focus_x || y != this.focus_y) {
+            this.moveFocus(x, y, event.shiftKey);
+            if(this.checkWin()) {
+                alert("YOU WON! score: " + this.score);
+                document.location.reload();
             }
         }
     }
