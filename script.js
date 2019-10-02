@@ -16,6 +16,7 @@ function configAssert(statement, message) {
 
 function checkConfig(config) {
 // TODO start_pos too big, count colored chips, check if win is possible
+// TODO transoform relative padding and focus width into absolute
     configAssert(Array.isArray(config.start_pos), "start_pos must be an Array");
 
     config.rows_n = config.start_pos.length;
@@ -59,7 +60,7 @@ function loadConfig() {
     let ret = null;
     let xobj = new XMLHttpRequest();
     xobj.overrideMimeType("application/json");
-    xobj.open('GET', 'config', false);
+    xobj.open('GET', 'config.json', false);
     xobj.onreadystatechange = function() {
         if(xobj.readyState == 4 && xobj.status == "200") {
             ret = JSON.parse(xobj.responseText);

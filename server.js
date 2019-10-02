@@ -17,13 +17,13 @@ function connectionHandler(request, response) {
         case '/':
             answerWithFile("text/html", './index.html');
             break;
-        case '/script':
+        case '/script.js':
             answerWithFile("text/javascript", './script.js');
             break;
-        case '/style':
+        case '/styles.css':
             answerWithFile("text/css", './styles.css');
             break;
-        case '/config':
+        case '/config.json':
             answerWithFile('text/json', './config.json');
             break;
         default:
@@ -35,4 +35,4 @@ function connectionHandler(request, response) {
 }
 
 
-http.createServer(connectionHandler).listen(7000);
+http.createServer(connectionHandler).listen(8000);
