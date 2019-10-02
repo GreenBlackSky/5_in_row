@@ -1,51 +1,74 @@
 
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
+// TODO Make request asynchonously and use some placeholder
+// TODO make it work
 const config = loadConfig();
 
 
-// TODO Make request asynchonously and use some placeholder
+function configAssert(statement, message) {
+    if(!statement) {
+        alert("Invalid config: " + message);
+        document.location.reload();
+    }
+}
+
+
+function checkConfig(config) {
+// TODO start_pos too big, count colored chips, check if win is possible
+    configAssert(Array.isArray(config.start_pos), "start_pos must be an Array");
+
+    config.rows_n = config.start_pos.length;
+    configAssert(config.rows_n != 0, "start_pos can't be empty");
+
+    for(let i = 0; i < config.start_pos.length; i++) {
+        configAssert(
+            Array.isArray(config.start_pos[i]),
+            "every row in start_pos must be an Array"
+        );
+    }
+
+    for(let i = 0; i < config.start_pos.length - 1; i++) {
+        configAssert(
+            config.start_pos[i].length == config.start_pos[i + 1].length,
+            "start_pos must be a rectangular array"
+        );
+    }
+
+    config.columns_n = config.start_pos[0].length;
+    configAssert(config.columns_n != 0, "start_pos can't be empty");
+
+    let validSlotValues = new Set(["rnd_color", "blocked", "empty"]);
+    for(let i = 0; i < config.start_pos.length; i++) {
+        for(let j = 0; j < config.start_pos[i].length; j++) {
+            configAssert(
+                validSlotValues.has(config.start_pos[i][j]),
+                "invalid object in start_pos"
+            );
+        }
+    }
+
+    configAssert(
+        config.win_lines.length >= config.chip_colors.length,
+        "to many colors for given win_lines"
+    );
+}
+
+
 function loadConfig() {
     let ret = null;
     let xobj = new XMLHttpRequest();
     xobj.overrideMimeType("application/json");
-    xobj.open('GET', 'config.json', false);
+    xobj.open('GET', 'config', false);
     xobj.onreadystatechange = function() {
         if(xobj.readyState == 4 && xobj.status == "200") {
             ret = JSON.parse(xobj.responseText);
         }
     };
     xobj.send(null);
+    checkConfig(ret);
     return ret;
 }
-
-
-function checkConfig() {
-// TODO implement
-// TODO remove columns_n and rows_n from config
-    if(!Array.isArray(config.start_pos)) {
-        alert("Invalid config: start_pos must be an Array");
-        document.location.reload();
-    }
-    config.columns_n = config.start_pos.length;
-    let validSlotValues = new Set(["rnd_color", "blocked", "empty"]);
-    for(let i = 0; i < config.start_pos.length; i++) {
-        if(!Array.isArray(config.start_pos[i])) {
-            alert("Invalid config: every row in start_pos must be an Array");
-            document.location.reload();
-        }
-        for(let j = 0; j < config.start_pos[i].length; j++) {
-            let value = config.start_pos[i][j];
-            if(!validSlotValues.has(value)) {
-                alert("Invalid config: invalid object in start_pos");
-                document.location.reload();
-            }
-        }
-    }
-}
-
-
-checkConfig();
 
 
 function shuffle(array) {
@@ -164,11 +187,12 @@ class Game {
         for(let x in config.win_lines) {
             for(let y = 0; y < config.rows_n - 1; y++) {
                 if(this.slots[y][x].color != this.slots[y + 1][x].color) {
-                    return false;
+                    return;
                 }
             }
         }
-        return true;
+        alert("YOU WON! score: " + this.score);
+        document.location.reload();
     }
 
     moveIsBlocked(currentSlot, nextSlot, focusLocked) {
@@ -229,10 +253,7 @@ class Game {
 
         if(x != this.focus_x || y != this.focus_y) {
             this.moveFocus(x, y, event.shiftKey);
-            if(this.checkWin()) {
-                alert("YOU WON! score: " + this.score);
-                document.location.reload();
-            }
+            this.checkWin();
         }
     }
 }
